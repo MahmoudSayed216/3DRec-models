@@ -1,0 +1,4 @@
+conda_env/
+outputs/
+__pycache__/
+*.json
