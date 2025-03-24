@@ -9,7 +9,7 @@ dataset:
   json_mapper: "/kaggle/working/3DRec-models/Pix2VoxSharp Pure/dataset mapper/ShapeNet.json"
 
 model:
-  pretrained: convnext_small_in22k  # either None, 1k or 22k
+  pretrained: convnext_large_in22k  # either None, 1k or 22k
   use_bias: True
 
 optim:
