@@ -16,27 +16,24 @@ import numpy as np
 
 
 
+
 def compute_validation_metrics(model, loss_fn, loader, THRESHOLDS, ITERATIONS_PER_EPOCH, configs):
     model.eval()
     VAL_LOSS_ACCUMULATOR = 0
 
-    IOU_20 = []
-    IOU_25 = []
-    IOU_30 = []
-    IOU_35 = []
-    IOU_40 = []
     IoUs = [[] for _ in range(len(THRESHOLDS))]
     with torch.no_grad():
         for idx, batch in enumerate(loader):
             images, volumes = batch
-            images = images.to(configs["device"])
+            images = images.squeeze(dim=1).to(configs["device"])
             volumes = volumes.to(configs["device"])
-
-            outputs = model(images)
-
-            loss = loss_fn(outputs, volumes)
+            with torch.amp.autocast(device_type=configs["device"], dtype=torch.float32):
+                outputs = model(images)
+                gen_volumes = outputs[1].squeeze(dim=1)
+                loss = loss_fn(gen_volumes, volumes)
+            
             VAL_LOSS_ACCUMULATOR+=loss.item()
-            _IOUs = compute_iou(outputs, volumes, ths=THRESHOLDS)  ## ASSUMING THEY ARE 3
+            _IOUs = compute_iou(gen_volumes, volumes, ths=THRESHOLDS)  ## ASSUMING THEY ARE 3
             for i, IoU in enumerate(_IOUs):
                 IoUs[i].append(IoU)
 
@@ -62,7 +59,9 @@ def update_dataset_configs(loader):
     # loader.dataset.choose_images_indices_for_epoch()
     return random_value
 
-
+def get_best_TH(IoUs, THs):
+    i = torch.argmax(torch.tensor(IoUs))
+    return THs[i]
 
 def train(configs):
     writer = Writer(configs["train_path"])
@@ -108,10 +107,10 @@ def train(configs):
 
     if not configs["train"]["continue_from_checkpoint"]:
         START_EPOCH = 0
-        current_best_mAP = 0
+        current_best_IoU = 0
     else: 
         print("loading checkpoint")
-        START_EPOCH, current_best_mAP, model_state_dict, optimizer_state_dict = network_utils.load_checkpoint(configs)
+        START_EPOCH, current_best_IoU, model_state_dict, optimizer_state_dict = network_utils.load_checkpoint(configs)
         model.load_state_dict(model_state_dict)
         optimizer.load_state_dict(optimizer_state_dict)
         print("state dict loaded without any problems")
@@ -122,8 +121,8 @@ def train(configs):
     loss_fn = VoxelLoss(weight=10)
     ITERATIONS_PER_EPOCH_TRAIN = int(len(train_dataset)/BATCH_SIZE)
     ITERATIONS_PER_EPOCH_VAL = int(len(val_dataset)/BATCH_SIZE)
-
-
+    scaler = torch.amp.GradScaler(configs["device"])  # ✅ Helps prevent underflow
+    
     for epoch in range(START_EPOCH, EPOCHS):
         LOG("TRAINING")
         LOG("EPOCH", epoch+1)
@@ -133,16 +132,17 @@ def train(configs):
         for idx, batch in enumerate(train_loader):
             optimizer.zero_grad()
             images, volumes = batch
-            images = images.to(configs["device"])
+            images = images.squeeze(dim=1).to(configs["device"])
             volumes = volumes.to(configs["device"])
 
-            outputs = model(images)
-            DEBUG("outputs shape", outputs.shape)
-
-            loss = loss_fn(outputs, volumes)
+            with torch.amp.autocast(device_type=configs["device"], dtype=torch.float32):
+                outputs = model(images)
+                gen_volumes = outputs[1].squeeze(dim=1)
+                loss = loss_fn(gen_volumes, volumes)
             TRAIN_LOSS_ACCUMUlATOR += loss.item()
-            loss.backward()
-            optimizer.step()
+            scaler.scale(loss).backward()  # ✅ Scale loss to prevent underflow
+            scaler.step(optimizer)  # ✅ Apply gradients safely
+            scaler.update()
             if idx % 50 == 0:
                 LOG("current loss", loss.item())
 
@@ -150,23 +150,25 @@ def train(configs):
 
         LOG("TESTING")
         valid_loss, valid_IoUs = compute_validation_metrics(model, loss_fn, val_loader, THRESHOLDS, ITERATIONS_PER_EPOCH_VAL, configs)
-        mAP = sum(valid_IoUs)/len(valid_IoUs)
+
+        best_iou_idx = torch.argmax(torch.tensor(valid_IoUs))
+        current_IoU = valid_IoUs[best_iou_idx]
+        corresponding_TH = THRESHOLDS[best_iou_idx]
+
+        # IoU = sum(valid_IoUs)/len(valid_IoUs)
 
         LOG("average train loss", average_epoch_loss)
         LOG("average test loss", valid_loss)
         LOG("test IoU @ different THs", valid_IoUs)
-        for TH, iou in zip(THRESHOLDS, valid_IoUs):
-            LOG(f"iou @ {TH}: {iou}")
-        LOG(f"mAP@{THRESHOLDS[0]}-{THRESHOLDS[-1]}", mAP)
         
 
 
-        if mAP > current_best_mAP:
-            current_best_mAP = mAP
+        if current_IoU > current_best_IoU:
+            current_best_IoU = current_IoU
             CHECKPOINT(f"IoU has scored a higher value at epoch {epoch+1}. Saving Weights...")
             writer.add_line(f"IoU has scored a higher value at epoch {epoch+1}. Saving Weights...")
             weights_path = os.path.join(configs["train_path"], "weights", "best.pth")
-            network_utils.save_checkpoints(weights_path, epoch+1,model, optimizer, mAP, epoch+1)
+            network_utils.save_checkpoints(weights_path, epoch+1,model, optimizer, current_IoU, corresponding_TH, epoch+1)
             volumes_path = os.path.join(configs["train_path"], "samples", f"output{epoch+1}.pth")
             images_path = os.path.join(configs["train_path"], "samples", f"images{epoch+1}.pth")
 
@@ -177,34 +179,15 @@ def train(configs):
         if (epoch+1) % configs["train"]["save_every"] == 0:
             weights_path = os.path.join(configs["train_path"], "weights", "last.pth")
             CHECKPOINT("Saving last Weights...")
-            network_utils.save_checkpoints(weights_path, epoch+1,model, optimizer, mAP, epoch+1)
+            network_utils.save_checkpoints(weights_path, epoch+1,model, optimizer, current_IoU, corresponding_TH, epoch+1)
 
-            if (epoch+1) % configs["train"]["reduce_lr_epoch"]== 0:
-                LOG("REDUCING LR")
-                reduce_lr_factor = configs["train"]["reduce_lr_factor"]
-                learning_rate*= reduce_lr_factor
-                writer.add_line(f"Learning rate has been reduced to {learning_rate} at epoch {epoch+1}")
-                writer.add_line(f"")
-                for param_group in optimizer.param_groups:
-                    param_group['lr'] *= reduce_lr_factor
-
-        if (epoch+1) == configs["train"]["epochs_till_merger"]:
-            model.set_merger(True)
-            LOG("MERGER ACTIVATED")
-            writer.add_line("MERGER ACTIVATED")
-
-        if (epoch+1) >= configs["train"]["epochs_till_merger"]:
-            random_val = gaussian_random(1, 12)
-            train_loader.dataset.set_n_views_rendering(random_val)
-            val_loader.dataset.set_n_views_rendering(random_val)
-
-        
         writer.add_scaler("TRAIN LOSS", epoch+1, average_epoch_loss)
         writer.add_scaler("VALID LOSS", epoch+1, valid_loss)
         for TH, iou in zip(THRESHOLDS, valid_IoUs):
+            LOG(f"IoU @ {TH}: {iou}")
             writer.add_line(f"IoU @ {TH}: {iou}")
 
-        writer.add_scaler("Mean IoU", epoch+1, mAP)
+        writer.add_scaler("Mean IoU", epoch+1, current_IoU)
 
 
 
@@ -212,6 +195,7 @@ def initiate_training_environment(path: str):
     if not os.path.exists(path):
         os.mkdir(os.path.join(path))
     new_path = os.path.join(path, datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+    DEBUG(new_path)
     os.mkdir(new_path)
     os.mkdir(os.path.join(new_path, "weights"))
     os.mkdir(os.path.join(new_path, "samples"))
@@ -222,7 +206,7 @@ def initiate_training_environment(path: str):
 
 def main():
     configs = None
-    with open("/home/mahmoud-sayed/Desktop/Graduation Project/current/Pix2Vox Models/Pix2VoxSharp/config.yaml", "r") as f:
+    with open("/home/mahmoud-sayed/Desktop/Graduation Project/current/Pix2Vox Models/Pix2VoxSharp Pure/config.yaml", "r") as f:
         configs = yaml.safe_load(f)
     DEBUGGER_SINGLETON.active = configs["use_debugger"]
 

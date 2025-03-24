@@ -29,6 +29,7 @@ class Encoder(nn.Module):
             img = img.squeeze(0)
             features = self.backbone(img)
             features = self.extra_layer(features)
+            print(features.shape)
             feature_maps.append(features)
 
         return torch.stack(feature_maps).permute(1, 0, 2, 3, 4).contiguous()
