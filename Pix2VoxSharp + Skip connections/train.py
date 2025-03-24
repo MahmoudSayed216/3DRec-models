@@ -212,7 +212,7 @@ def initiate_training_environment(path: str):
 
 def main():
     configs = None
-    with open("/home/mahmoud-sayed/Desktop/Graduation Project/current/Pix2Vox Models/Pix2VoxSharp + Skip connections/config.yaml", "r") as f:
+    with open("config.yaml", "r") as f:
         configs = yaml.safe_load(f)
     DEBUGGER_SINGLETON.active = configs["use_debugger"]
 
