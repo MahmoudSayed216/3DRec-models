@@ -122,7 +122,12 @@ def train(configs):
     ITERATIONS_PER_EPOCH_TRAIN = int(len(train_dataset)/BATCH_SIZE)
     ITERATIONS_PER_EPOCH_VAL = int(len(val_dataset)/BATCH_SIZE)
     scaler = torch.amp.GradScaler(configs["device"])  # ✅ Helps prevent underflow
-    
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer, 
+    mode='min',       # Monitor the validation loss (minimize it)
+    factor=0.4,       # Factor by which the learning rate will be reduced
+    patience=6,      # Number of epochs with no improvement after which LR will be reduced
+    min_lr=1e-6)
     for epoch in range(START_EPOCH, EPOCHS):
         LOG("TRAINING")
         LOG("EPOCH", epoch+1)
@@ -150,7 +155,8 @@ def train(configs):
 
         LOG("TESTING")
         valid_loss, valid_IoUs = compute_validation_metrics(model, loss_fn, val_loader, THRESHOLDS, ITERATIONS_PER_EPOCH_VAL, configs)
-
+        scheduler.step(valid_loss)
+        print(scheduler.get_last_lr())
         best_iou_idx = torch.argmax(torch.tensor(valid_IoUs))
         current_IoU = valid_IoUs[best_iou_idx]
         corresponding_TH = THRESHOLDS[best_iou_idx]
@@ -206,7 +212,7 @@ def initiate_training_environment(path: str):
 
 def main():
     configs = None
-    with open("/home/mahmoud-sayed/Desktop/Graduation Project/current/Pix2Vox Models/Pix2VoxSharp Pure/config.yaml", "r") as f:
+    with open("config.yaml", "r") as f:
         configs = yaml.safe_load(f)
     DEBUGGER_SINGLETON.active = configs["use_debugger"]
 

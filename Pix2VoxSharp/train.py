@@ -122,7 +122,12 @@ def train(configs):
     loss_fn = VoxelLoss(weight=10)
     ITERATIONS_PER_EPOCH_TRAIN = int(len(train_dataset)/BATCH_SIZE)
     ITERATIONS_PER_EPOCH_VAL = int(len(val_dataset)/BATCH_SIZE)
-
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer, 
+    mode='min',       # Monitor the validation loss (minimize it)
+    factor=0.4,       # Factor by which the learning rate will be reduced
+    patience=6,      # Number of epochs with no improvement after which LR will be reduced
+    min_lr=1e-6)
 
     for epoch in range(START_EPOCH, EPOCHS):
         LOG("TRAINING")
