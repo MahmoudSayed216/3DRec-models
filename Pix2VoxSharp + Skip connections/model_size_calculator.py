@@ -1,17 +1,10 @@
 # this method is a very accurate but not an exact calculation
-# from model import decoder, encoder, merger, refiner
 import yaml
 
 configs = None
 with open("config.yaml", "r") as f:
     configs = yaml.safe_load(f)
 
-# model_cfg = configs["model"]
-# print(model_cfg)
-# Encoder = encoder.Encoder(configs=model_cfg).to(configs["device"])
-# Decoder = decoder.Decoder().to(configs["device"])
-# Merger = merger.Merger(model_cfg["lrelu_factor"]).to(configs["device"])
-# Refiner = refiner.Refiner(model_cfg["lrelu_factor"], model_cfg["use_bias"]).to(configs["device"])
 from model import full_model
 
 model = full_model.Pix2VoxSharp(configs)

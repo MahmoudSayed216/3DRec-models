@@ -21,12 +21,13 @@ def init_weights(l):
         init.normal_(l.weight, 0, 0.01)
         init.constant_(l.bias, 0)
 
-def save_checkpoints(file_path, epoch_idx, model, model_solver, iou, epoch):
+def save_checkpoints(file_path, epoch_idx, model, model_solver, iou, threshold, epoch):
     print('[INFO] %s Saving checkpoint to %s ...' % (dt.now(), file_path))
     CHECKPOINT(f"{dt.now()} Saving checkpoints to {file_path}")
     checkpoint = {
         'epoch_idx': epoch_idx,
         'iou': iou,
+        'threshold': threshold,
         'best_epoch': epoch,
         'model_state_dict': model.state_dict(),
         'model_solver_state_dict': model_solver.state_dict(),

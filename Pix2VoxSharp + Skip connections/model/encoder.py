@@ -1,34 +1,27 @@
 import torch
 import torch.nn as nn
+import timm
 from torchvision.models import convnext_base
 
 class Encoder(nn.Module):
     def __init__(self, configs):
         super().__init__()
-        pretrained = None if configs["model"]["pretrained"] == "None" else configs["model"]["pretrained"]
+        self.backbone = self._prep_convnext(configs["model"]["pretrained"])
 
-        self.convnext = convnext_base(pretrained=pretrained)
-        self.backbone = nn.Sequential(*list(self.convnext.features.children())[:6])
         
-        for param in self.convnext.parameters():
+    def _prep_convnext(self, pretrained):
+        model_name = None if pretrained == "None" else pretrained
+        convnext_base = timm.create_model(model_name, pretrained=False, features_only = True)
+        #Unfreezing all the layers
+        for param in convnext_base.parameters():
             param.requires_grad = False
+        #Except for the last stage
+        for param in convnext_base.stages_3.parameters():
+            param.requires_grad = True
+        return convnext_base
 
-        
-        self.extra_layer = nn.Sequential(
-            nn.MaxPool2d(kernel_size=2, stride=2, padding=1),
-            nn.Conv2d(512, 384, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm2d(384),
-            nn.GELU()
-        )
 
-    def forward(self, images: torch.Tensor):
-        images = images.permute(1, 0, 2, 3, 4).contiguous()
-        feature_maps = []
-
-        for img in torch.split(images, 1, dim=0):
-            img = img.squeeze(0)
-            features = self.backbone(img)
-            features = self.extra_layer(features)
-            feature_maps.append(features)
-
-        return torch.stack(feature_maps).permute(1, 0, 2, 3, 4).contiguous()
+    def forward(self, image: torch.Tensor):
+        # images = images.permute(1, 0, 2, 3, 4).contiguous()
+        features = self.backbone(image)
+        return features
