@@ -35,8 +35,6 @@ class Decoder(nn.Module):
 
     def forward(self, up1, up2, up3):
         volume = self.upsample1(up1)
-        print(volume.shape)
-        print(up2.shape)
         volume = torch.cat((volume, up2), dim=1)
         volume = self.upsample2(volume)
         volume = torch.cat((volume, up3), dim=1)
