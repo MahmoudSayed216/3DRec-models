@@ -13,7 +13,7 @@ class Pix2VoxSharp(nn.Module):
     def forward(self, x:torch.Tensor):
         batch_size = x.size(0)
         feature_maps = self.encoder(x)
-        upprojection = feature_maps.contiguous().view((batch_size, 3163, 2, 2, 2))
+        upprojection = feature_maps.contiguous().view((batch_size, 3136, 2, 2, 2))
         volume = self.decoder(upprojection)
         return volume
         
