@@ -24,5 +24,4 @@ class Encoder(nn.Module):
     def forward(self, image: torch.Tensor):
         # images = images.permute(1, 0, 2, 3, 4).contiguous()
         features = self.backbone(image)
-        print(features[-1].shape)
         return features[-1]

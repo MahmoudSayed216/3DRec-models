@@ -34,8 +34,6 @@ class Decoder(nn.Module):
 
 
     def forward(self, features_maps):
-        
-        print(features_maps.shape)
         volume = self.upsample1(features_maps)
         volume = self.upsample2(volume)
         volume = self.upsample3(volume)
