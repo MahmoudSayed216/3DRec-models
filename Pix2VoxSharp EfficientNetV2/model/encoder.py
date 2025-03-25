@@ -11,7 +11,7 @@ class Encoder(nn.Module):
         
     def _prep_convnext(self, pretrained):
         model_name = None if pretrained == "None" else pretrained
-        efficient_net = timm.create_model(model_name, pretrained=False, features_only = True)
+        efficient_net = timm.create_model(model_name, pretrained=True, features_only = True)
         #Unfreezing all the layers
         for param in efficient_net.parameters():
             param.requires_grad = False
@@ -24,5 +24,4 @@ class Encoder(nn.Module):
     def forward(self, image: torch.Tensor):
         # images = images.permute(1, 0, 2, 3, 4).contiguous()
         features = self.backbone(image)
-        print(features[-1].shape)
         return features[-1]

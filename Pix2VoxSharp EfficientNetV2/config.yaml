@@ -1,15 +1,15 @@
 use_debugger: True
 output_dir: "./outputs"  
 thresholds: [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
-device: "cpu"
+device: "cuda"
 
 
 dataset:
-  data: "/home/mahmoud-sayed/Desktop/Graduation Project/current/Data/Experimental"
-  json_mapper: "dataset mapper/ShapeNet3DClone.json"
+  data: "/kaggle/input/shapenet"
+  json_mapper: "./dataset mapper/ShapeNet.json"
 
 model:
-  pretrained: tf_efficientnetv2_m_in21k   # either None, 1k or 22k
+  pretrained: tf_efficientnetv2_m_in21k  # either None, 1k or 22k
   use_bias: True
 
 optim:
@@ -20,7 +20,7 @@ optim:
 
 train:
   epochs: 100
-  batch_size: 4
+  batch_size: 32
   start_epoch: 0
   save_every: 3
 
