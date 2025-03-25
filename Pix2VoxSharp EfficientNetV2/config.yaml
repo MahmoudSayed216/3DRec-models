@@ -1,0 +1,29 @@
+use_debugger: True
+output_dir: "./outputs"  
+thresholds: [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
+device: "cuda"
+
+
+dataset:
+  data: "/kaggle/input/shapenet"
+  json_mapper: "./dataset mapper/ShapeNet.json"
+
+model:
+  pretrained: tf_efficientnetv2_m_in21k   # either None, 1k or 22k
+  use_bias: True
+
+optim:
+  type: AdamW   # can be Adam or sgd?
+  lr: 0.001
+  patience: 5
+  
+
+train:
+  epochs: 100
+  batch_size: 32
+  start_epoch: 0
+  save_every: 3
+
+  continue_from_checkpoint: False
+  checkpoint_id: 2025-03-24_03-02-17
+  checkpoint_type: best
