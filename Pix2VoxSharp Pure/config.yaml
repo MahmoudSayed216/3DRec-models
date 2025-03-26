@@ -26,5 +26,7 @@ train:
   save_every: 3
 
   continue_from_checkpoint: True
-  checkpoint_id: 2025-03-25_03-02-45
-  checkpoint_type: last
+  checkpoint_id: 2025-03-26_06-16-57
+  checkpoint_type: best
+
+  # /kaggle/working/session8/Pix2VoxSharp Pure/outputs/2025-03-26_06-16-57/weights/best.pth

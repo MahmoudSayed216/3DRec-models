@@ -46,7 +46,7 @@ def load_checkpoint(configs):
 
     path = os.path.join(kaggle_base, "session"+session_id, proj_name, "outputs", checkpoint_id, "weights", checkpoint_type+".pth")
     # path = os.path.join(output_path, checkpoint_id, "weights", checkpoint_type+".pth")
-
+    # path = "/kaggle/working/session8/Pix2VoxSharp Pure/outputs/2025-03-26_06-16-57/weights/best.pth"
     checkpoint:dict = torch.load(path, map_location=configs["device"])
 
     print(checkpoint.keys())
