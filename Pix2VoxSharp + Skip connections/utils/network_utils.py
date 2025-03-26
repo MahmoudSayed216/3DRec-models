@@ -40,7 +40,7 @@ def load_checkpoint(configs):
     checkpoint_id = configs["train"]["checkpoint_id"]
     output_path = configs["output_dir"]
     checkpoint_type = configs["train"]["checkpoint_type"]
-    path = os.path.join(output_path, checkpoint_id, "weights", checkpoint_type+".pth")
+    path = os.path.join("/kaggle/working/2025-03-24_20-43-59/weights/best.pth")
 
     checkpoint:dict = torch.load(path, map_location=configs["device"])
 
