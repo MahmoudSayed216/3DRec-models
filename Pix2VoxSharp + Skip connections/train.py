@@ -109,11 +109,10 @@ def train(configs):
         START_EPOCH = 0
         current_best_IoU = 0
     else: 
-        optimizer = torch.optim.AdamW(params=[], lr=configs["optim"]["lr"])
         model = torch.nn.Linear(10, 2)
-        optimizer.add_param_group({'params': model.parameters()})
+        optimizer = torch.optim.AdamW(params=model.parameters(), lr=configs["optim"]["lr"])
 
-        
+
         print("loading checkpoint")
         START_EPOCH, current_best_IoU, model_state_dict, optimizer_state_dict = network_utils.load_checkpoint(configs)
         model.load_state_dict(model_state_dict)
