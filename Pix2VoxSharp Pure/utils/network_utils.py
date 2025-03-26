@@ -56,4 +56,4 @@ def load_checkpoint(configs):
     solver_state_dict = checkpoint['model_solver_state_dict']
 
 
-    return epoch, iou, model_state_dict, 
+    return epoch, iou, model_state_dict, solver_state_dict
