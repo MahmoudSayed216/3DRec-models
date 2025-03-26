@@ -44,7 +44,7 @@ def load_checkpoint(configs):
     session_id = configs["cp_session_id"]
     proj_name = configs["project_name"]
 
-    path = os.path.join(kaggle_base, "session",session_id, proj_name, "outputs", checkpoint_id, "weights", checkpoint_type+".pth")
+    path = os.path.join(kaggle_base, "session"+session_id, proj_name, "outputs", checkpoint_id, "weights", checkpoint_type+".pth")
     # path = os.path.join(output_path, checkpoint_id, "weights", checkpoint_type+".pth")
 
     checkpoint:dict = torch.load(path, map_location=configs["device"])
