@@ -211,7 +211,7 @@ def initiate_training_environment(path: str):
 
 
 def main():
-    args = sys.argv()
+    args = sys.argv
     checkpoint_session = args[1]
     configs = None
     with open("config.yaml", "r") as f:
