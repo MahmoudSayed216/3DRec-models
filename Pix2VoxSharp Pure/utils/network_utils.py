@@ -40,7 +40,12 @@ def load_checkpoint(configs):
     checkpoint_id = configs["train"]["checkpoint_id"]
     output_path = configs["output_dir"]
     checkpoint_type = configs["train"]["checkpoint_type"]
-    path = os.path.join(output_path, checkpoint_id, "weights", checkpoint_type+".pth")
+    kaggle_base = configs["kaggle_base"]
+    session_id = configs["cp_session_id"]
+    proj_name = configs["project_name"]
+
+    path = os.path.join(kaggle_base, "session",session_id, proj_name, "outputs", checkpoint_id, "weights", checkpoint_type+".pth")
+    # path = os.path.join(output_path, checkpoint_id, "weights", checkpoint_type+".pth")
 
     checkpoint:dict = torch.load(path, map_location=configs["device"])
 
@@ -51,4 +56,4 @@ def load_checkpoint(configs):
     solver_state_dict = checkpoint['model_solver_state_dict']
 
 
-    return epoch, iou, model_state_dict, solver_state_dict
+    return epoch, iou, model_state_dict, 
