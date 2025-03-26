@@ -20,7 +20,7 @@ optim:
 
 train:
   epochs: 100
-  batch_size: 32
+  batch_size: 24
   start_epoch: 0
   save_every: 3
 
