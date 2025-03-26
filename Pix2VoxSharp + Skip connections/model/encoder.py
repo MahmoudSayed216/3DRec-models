@@ -11,7 +11,7 @@ class Encoder(nn.Module):
         
     def _prep_convnext(self, pretrained):
         model_name = None if pretrained == "None" else pretrained
-        convnext_base = timm.create_model(model_name, pretrained=False, features_only = True)
+        convnext_base = timm.create_model(model_name, pretrained=True, features_only = True)
         #Unfreezing all the layers
         for param in convnext_base.parameters():
             param.requires_grad = False
