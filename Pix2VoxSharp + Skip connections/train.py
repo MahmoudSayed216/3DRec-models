@@ -103,9 +103,9 @@ def train(configs):
 
     model = full_model.Pix2VoxSharp(configs).to(configs["device"])
     trainable_params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.AdamW(params=trainable_params, lr=configs["optim"]["lr"])
 
     if not configs["train"]["continue_from_checkpoint"]:
+        optimizer = torch.optim.AdamW(params=trainable_params, lr=configs["optim"]["lr"])
         START_EPOCH = 0
         current_best_IoU = 0
     else: 
