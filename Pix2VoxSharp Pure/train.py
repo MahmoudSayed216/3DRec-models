@@ -178,8 +178,8 @@ def train(configs):
             volumes_path = os.path.join(configs["train_path"], "samples", f"output{epoch+1}.pth")
             images_path = os.path.join(configs["train_path"], "samples", f"images{epoch+1}.pth")
 
-            torch.save(outputs, volumes_path)
-            torch.save(images, images_path)
+            # torch.save(outputs, volumes_path)
+            # torch.save(images, images_path)
             LOG("tensor saved")
             
         if (epoch+1) % configs["train"]["save_every"] == 0:
