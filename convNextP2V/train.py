@@ -103,7 +103,7 @@ def train(configs):
 
     model = full_model.Pix2VoxSharp(configs).to(configs["device"])
     trainable_params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.AdamW(params=trainable_params, lr=configs["optim"]["lr"])
+    optimizer = torch.optim.AdamW(params=trainable_params, lr=configs["optim"]["lr"], weight_decay=0.0001)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
                 optimizer, 
                 mode='min',       # Monitor the validation loss (minimize it)
