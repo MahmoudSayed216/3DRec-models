@@ -110,6 +110,11 @@ def train(configs):
                 factor=0.4,       # Factor by which the learning rate will be reduced
                 patience=6,      # Number of epochs with no improvement after which LR will be reduced
                 min_lr=1e-6)
+    
+
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100, eta_min=1e-6)
+
+
     if not configs["train"]["continue_from_checkpoint"]:
         START_EPOCH = 0
         current_best_IoU = 0
