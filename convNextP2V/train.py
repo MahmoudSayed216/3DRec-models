@@ -104,15 +104,22 @@ def train(configs):
     model = full_model.Pix2VoxSharp(configs).to(configs["device"])
     trainable_params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.AdamW(params=trainable_params, lr=configs["optim"]["lr"])
-
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer, 
+                mode='min',       # Monitor the validation loss (minimize it)
+                factor=0.4,       # Factor by which the learning rate will be reduced
+                patience=6,      # Number of epochs with no improvement after which LR will be reduced
+                min_lr=1e-6)
     if not configs["train"]["continue_from_checkpoint"]:
         START_EPOCH = 0
         current_best_IoU = 0
+
     else: 
         print("loading checkpoint")
-        START_EPOCH, current_best_IoU, model_state_dict, optimizer_state_dict = network_utils.load_checkpoint(configs)
+        START_EPOCH, current_best_IoU, model_state_dict, optimizer_state_dict, scheduler_state_dict = network_utils.load_checkpoint(configs)
         model.load_state_dict(model_state_dict)
         optimizer.load_state_dict(optimizer_state_dict)
+        scheduler.load_state_dict(scheduler_state_dict)
         print("state dict loaded without any problems")
 
     
@@ -122,12 +129,7 @@ def train(configs):
     ITERATIONS_PER_EPOCH_TRAIN = int(len(train_dataset)/BATCH_SIZE)
     ITERATIONS_PER_EPOCH_VAL = int(len(val_dataset)/BATCH_SIZE)
     scaler = torch.amp.GradScaler(configs["device"])  # ✅ Helps prevent underflow
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-    optimizer, 
-    mode='min',       # Monitor the validation loss (minimize it)
-    factor=0.4,       # Factor by which the learning rate will be reduced
-    patience=6,      # Number of epochs with no improvement after which LR will be reduced
-    min_lr=1e-6)
+    
     for epoch in range(START_EPOCH, EPOCHS):
         LOG("TRAINING")
         LOG("EPOCH", epoch+1)
@@ -174,7 +176,7 @@ def train(configs):
             CHECKPOINT(f"IoU has scored a higher value at epoch {epoch+1}. Saving Weights...")
             writer.add_line(f"IoU has scored a higher value at epoch {epoch+1}. Saving Weights...")
             weights_path = os.path.join(configs["train_path"], "weights", "best.pth")
-            network_utils.save_checkpoints(weights_path, epoch+1,model, optimizer, current_IoU, corresponding_TH, epoch+1)
+            network_utils.save_checkpoints(weights_path, epoch+1,model, optimizer, current_IoU, corresponding_TH, epoch+1, scheduler)
             volumes_path = os.path.join(configs["train_path"], "samples", f"output{epoch+1}.pth")
             images_path = os.path.join(configs["train_path"], "samples", f"images{epoch+1}.pth")
 

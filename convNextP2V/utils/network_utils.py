@@ -21,7 +21,7 @@ def init_weights(l):
         init.normal_(l.weight, 0, 0.01)
         init.constant_(l.bias, 0)
 
-def save_checkpoints(file_path, epoch_idx, model, model_solver, iou, threshold, epoch):
+def save_checkpoints(file_path, epoch_idx, model, model_solver, iou, threshold, epoch, scheduler):
     print('[INFO] %s Saving checkpoint to %s ...' % (dt.now(), file_path))
     CHECKPOINT(f"{dt.now()} Saving checkpoints to {file_path}")
     checkpoint = {
@@ -31,6 +31,7 @@ def save_checkpoints(file_path, epoch_idx, model, model_solver, iou, threshold, 
         'best_epoch': epoch,
         'model_state_dict': model.state_dict(),
         'model_solver_state_dict': model_solver.state_dict(),
+        'scheduler_state_dict': scheduler.state_dict()
     }
 
     torch.save(checkpoint, file_path)
@@ -54,6 +55,7 @@ def load_checkpoint(configs):
     iou = checkpoint['iou']
     model_state_dict:OrderedDict = checkpoint['model_state_dict']
     solver_state_dict = checkpoint['model_solver_state_dict']
+    scheduler_state_dict = checkpoint['scheduler_state_dict']
 
 
-    return epoch, iou, model_state_dict, solver_state_dict
+    return epoch, iou, model_state_dict, solver_state_dict, scheduler_state_dict
