@@ -9,7 +9,7 @@ class Decoder(nn.Module):
         bias = configs["model"]["use_bias"]
         upsample_mode = configs['model']['upsample_mode']
 
-        self.upsample1 = ConvNextUpBlock(in_channels=4704, out_channels=512, upsample_mode=upsample_mode, target_side_length=4)
+        self.upsample1 = ConvNextUpBlock(in_channels=6272, out_channels=512, upsample_mode=upsample_mode, target_side_length=4)
         
         
         self.upsample2 = ConvNextUpBlock(in_channels=512, out_channels=256, upsample_mode=upsample_mode, target_side_length=8)

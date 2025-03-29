@@ -14,7 +14,7 @@ class Pix2VoxSharp(nn.Module):
         # batch_size = x.size(0)
         feature_maps = self.encoder(x)
         print(feature_maps.shape)
-        upprojection = feature_maps.contiguous().view((self.batch_size, 4704, 2, 2, 2))
+        upprojection = feature_maps.contiguous().view((self.batch_size, 6272, 2, 2, 2))
         volume = self.decoder(upprojection)
         return volume
         

@@ -214,7 +214,8 @@ def initiate_training_environment(path: str):
 
 def main():
     args = sys.argv
-    checkpoint_session = args[1]
+    if len(args) == 2:
+        checkpoint_session = args[1]
     configs = None
     with open("config.yaml", "r") as f:
         configs = yaml.safe_load(f)
@@ -222,7 +223,8 @@ def main():
 
     train_path = initiate_training_environment(configs["output_dir"])
     configs["train_path"] = train_path
-    configs["cp_session_id"] = checkpoint_session
+    if len(args) == 2:
+        configs["cp_session_id"] = checkpoint_session
     train(configs=configs)
 
 
