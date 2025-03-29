@@ -27,6 +27,6 @@ train:
   start_epoch: 0
   save_every: 3
 
-  continue_from_checkpoint: True
+  continue_from_checkpoint: False
   checkpoint_id: 2025-03-29_10-28-03
   checkpoint_type: best
