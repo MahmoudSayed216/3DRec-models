@@ -177,8 +177,8 @@ def train(configs):
             writer.add_line(f"IoU has scored a higher value at epoch {epoch+1}. Saving Weights...")
             weights_path = os.path.join(configs["train_path"], "weights", "best.pth")
             network_utils.save_checkpoints(weights_path, epoch+1,model, optimizer, current_IoU, corresponding_TH, epoch+1, scheduler)
-            volumes_path = os.path.join(configs["train_path"], "samples", f"output{epoch+1}.pth")
-            images_path = os.path.join(configs["train_path"], "samples", f"images{epoch+1}.pth")
+            # volumes_path = os.path.join(configs["train_path"], "samples", f"output{epoch+1}.pth")
+            # images_path = os.path.join(configs["train_path"], "samples", f"images{epoch+1}.pth")
 
             # torch.save(outputs, volumes_path)
             # torch.save(images, images_path)
@@ -187,7 +187,7 @@ def train(configs):
         if (epoch+1) % configs["train"]["save_every"] == 0:
             weights_path = os.path.join(configs["train_path"], "weights", "last.pth")
             CHECKPOINT("Saving last Weights...")
-            network_utils.save_checkpoints(weights_path, epoch+1,model, optimizer, current_IoU, corresponding_TH, epoch+1)
+            network_utils.save_checkpoints(weights_path, epoch+1,model, optimizer, current_IoU, corresponding_TH, epoch+1, scheduler)
 
         writer.add_scaler("TRAIN LOSS", epoch+1, average_epoch_loss)
         writer.add_scaler("VALID LOSS", epoch+1, valid_loss)
