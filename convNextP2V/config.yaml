@@ -10,9 +10,9 @@ dataset:
   json_mapper: "./dataset mapper/ShapeNet.json"
 
 model:
-  backbone: convnext_small_in22k  # either None, 1k or 22k
+  backbone: convnext_base_in22k  # either None, 1k or 22k
   use_bias: True
-  pretrained: False
+  pretrained: True
   upsample_mode: transpose
 
 optim:
