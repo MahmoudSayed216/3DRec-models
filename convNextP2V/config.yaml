@@ -17,7 +17,7 @@ model:
 
 optim:
   type: AdamW   # can be Adam or sgd?
-  lr: 0.0008
+  lr: 0.001
   patience: 5
   
 
