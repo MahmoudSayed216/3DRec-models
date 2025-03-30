@@ -103,13 +103,18 @@ def train(configs):
 
     model = full_model.Pix2VoxSharp(configs).to(configs["device"])
     trainable_params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.AdamW(params=trainable_params, lr=configs["optim"]["lr"])
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                optimizer, 
-                mode='min',       # Monitor the validation loss (minimize it)
-                factor=0.4,       # Factor by which the learning rate will be reduced
-                patience=6,      # Number of epochs with no improvement after which LR will be reduced
-                min_lr=1e-6)
+    optimizer = torch.optim.AdamW(params=trainable_params, lr=configs["optim"]["lr"], weight_decay=0.0001)
+    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+    #             optimizer, 
+    #             mode='min',       # Monitor the validation loss (minimize it)
+    #             factor=0.4,       # Factor by which the learning rate will be reduced
+    #             patience=6,      # Number of epochs with no improvement after which LR will be reduced
+    #             min_lr=1e-6)
+    
+
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100, eta_min=1e-6)
+
+
     if not configs["train"]["continue_from_checkpoint"]:
         START_EPOCH = 0
         current_best_IoU = 0
